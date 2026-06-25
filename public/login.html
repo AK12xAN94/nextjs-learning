@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录页面</title>
+    <!-- 引入 React 和 ReactDOM -->
+    <script
+      defer
+      src="https://unpkg.com/react@18.2.0/umd/react.development.js"
+    ></script>
+    <script
+      defer
+      src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"
+    ></script>
+    <!-- 引入 Babel 用于编译 JSX -->
+    <script
+      defer
+      src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"
+    ></script>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind 自定义配置 -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: "#4a90d9",
+                hover: "#357abd",
+              },
+            },
+            fontFamily: {
+              sans: [
+                "-apple-system",
+                "BlinkMacSystemFont",
+                "Segoe UI",
+                "Roboto",
+                "Oxygen",
+                "Ubuntu",
+                "Cantarell",
+                "Open Sans",
+                "Helvetica Neue",
+                "sans-serif",
+              ],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen flex items-center justify-center p-5 bg-gray-100 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      // 使用立即执行函数创建模块化结构
+      (() => {
+        // 缓存 root 实例
+        let root = null;
+
+        // ========== API 模块 ==========
+        const login = async (credentials) => {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+
+          if (
+            credentials.username === "admin" &&
+            credentials.password === "123456"
+          ) {
+            return {
+              success: true,
+              data: {
+                token: "mock_jwt_token_12345",
+                user: { id: 1, username: "admin", nickname: "管理员" },
+              },
+              message: "登录成功",
+            };
+          } else {
+            return {
+              success: false,
+              message: "用户名或密码错误（演示：用户名 admin，密码 123456）",
+            };
+          }
+        };
+
+        const saveUserSession = (user, token) => {
+          localStorage.setItem("user", JSON.stringify(user));
+          localStorage.setItem("token", token);
+        };
+
+        // ========== 验证模块 ==========
+        const validateUsername = (username) => {
+          if (!username || !username.trim()) return "请输入用户名";
+          if (username.trim().length < 3) return "用户名至少需要3个字符";
+          return "";
+        };
+
+        const validatePassword = (password) => {
+          if (!password) return "请输入密码";
+          if (password.length < 6) return "密码至少需要6个字符";
+          return "";
+        };
+
+        const validateLoginForm = (formData) => {
+          const errors = {
+            username: validateUsername(formData.username),
+            password: validatePassword(formData.password),
+          };
+          return { errors, isValid: !errors.username && !errors.password };
+        };
+
+        // ========== 状态管理 ==========
+        let state = {
+          formData: { username: "", password: "" },
+          errors: { username: "", password: "" },
+          isLoading: false,
+          statusMessage: "",
+          statusType: "",
+          bookList: [
+            {
+              id: 1,
+              title: "React 从入门到精通",
+              author: "张三",
+              price: 99.99,
+            },
+            {
+              id: 2,
+              title: "Next.js 从入门到精通",
+              author: "李四",
+              price: 199.99,
+            },
+            {
+              id: 3,
+              title: "TypeScript 从入门到精通",
+              author: "王五",
+              price: 149.99,
+            },
+          ],
+          movieList: [
+            {
+              id: 1,
+              title: "React 从入门到精通",
+              author: "张三",
+              price: 99.99,
+            },
+            {
+              id: 2,
+              title: "Next.js 从入门到精通",
+              author: "李四",
+              price: 199.99,
+            },
+            {
+              id: 3,
+              title: "TypeScript 从入门到精通",
+              author: "王五",
+              price: 149.99,
+            },
+          ],
+        };
+
+        const updateState = (newState) => {
+          state = { ...state, ...newState };
+          render();
+        };
+
+        const updateField = (field, value) => {
+          updateState({
+            formData: { ...state.formData, [field]: value },
+            errors: { ...state.errors, [field]: "" },
+          });
+        };
+
+        const showStatusMessage = (message, type) => {
+          updateState({ statusMessage: message, statusType: type });
+          if (type !== "loading") {
+            setTimeout(() => {
+              updateState({ statusMessage: "", statusType: "" });
+            }, 3000);
+          }
+        };
+
+        // ========== 组件定义 ==========
+
+        // 状态消息类型样式映射
+        const statusTypeClasses = {
+          success: "bg-green-100 text-green-800 border-green-200",
+          error: "bg-red-100 text-red-800 border-red-200",
+          loading: "bg-cyan-100 text-cyan-800 border-cyan-200",
+        };
+
+        const InputField = ({
+          label,
+          id,
+          type = "text",
+          placeholder,
+          value,
+          onChange,
+          error,
+          disabled,
+        }) => (
+          <div className="mb-5">
+            <label
+              htmlFor={id}
+              className="block mb-2 text-sm font-medium text-gray-500"
+            >
+              {label}
+            </label>
+            <input
+              id={id}
+              type={type}
+              placeholder={placeholder}
+              value={value}
+              onChange={(e) => onChange(id, e.target.value)}
+              className={`w-full p-2.5 sm:p-3 text-sm border rounded transition-all duration-300 focus:outline-none focus:ring-2 ${
+                error
+                  ? "border-red-500 focus:ring-red-500/10"
+                  : "border-gray-300 focus:border-primary focus:ring-primary/10"
+              }`}
+              disabled={disabled}
+            />
+            {error && (
+              <div className="mt-1 text-xs text-red-500">{error}</div>
+            )}
+          </div>
+        );
+
+        const StatusMessage = ({ message, type }) => {
+          if (!message) return null;
+          return (
+            <div
+              className={`mt-4 mb-4 p-3 rounded text-center text-sm border ${
+                statusTypeClasses[type] || ""
+              }`}
+            >
+              {message}
+            </div>
+          );
+        };
+
+        const Button = ({ children, onClick, disabled }) => (
+          <button
+            className="w-full py-2.5 sm:py-3 text-base text-white border-0 rounded cursor-pointer transition-all duration-300 bg-primary hover:bg-primary-hover hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:translate-y-0 disabled:bg-gray-400"
+            onClick={onClick}
+            disabled={disabled}
+          >
+            {children}
+          </button>
+        );
+
+        const LoginForm = () => {
+          const handleLogin = async () => {
+            try {
+              const { errors, isValid } = validateLoginForm(state.formData);
+              updateState({ errors });
+
+              if (!isValid) return;
+
+              showStatusMessage("正在登录...", "loading");
+              updateState({ isLoading: true });
+
+              const response = await login(state.formData);
+
+              if (response.success) {
+                showStatusMessage(response.message, "success");
+                saveUserSession(response.data.user, response.data.token);
+                setTimeout(() => {
+                  alert(`登录成功！欢迎, ${response.data.user.nickname}`);
+                }, 1000);
+              } else {
+                showStatusMessage(response.message, "error");
+                updateState({ isLoading: false });
+              }
+            } catch (error) {
+              console.error("登录过程发生错误:", error);
+              showStatusMessage("登录失败，请稍后重试", "error");
+              updateState({ isLoading: false });
+            }
+          };
+
+          return (
+            <div className="w-full max-w-[400px] p-5 sm:p-8 m-2.5 sm:m-0 bg-white border border-gray-200 rounded-lg shadow-md">
+              <h1 className="mb-8 text-xl sm:text-2xl font-semibold text-center text-gray-800">
+                用户登录
+              </h1>
+              <StatusMessage
+                message={state.statusMessage}
+                type={state.statusType}
+              />
+              <InputField
+                label="用户名"
+                id="username"
+                type="text"
+                placeholder="请输入用户名"
+                value={state.formData.username}
+                onChange={updateField}
+                error={state.errors.username}
+                disabled={state.isLoading}
+              />
+              <InputField
+                label="密码"
+                id="password"
+                type="password"
+                placeholder="请输入密码"
+                value={state.formData.password}
+                onChange={updateField}
+                error={state.errors.password}
+                disabled={state.isLoading}
+              />
+              <Button onClick={handleLogin} disabled={state.isLoading}>
+                {state.isLoading ? "登录中..." : "登录"}
+              </Button>
+              <p className="mt-4 text-xs text-center text-gray-400">
+                演示账号：用户名 admin，密码 123456
+              </p>
+              <p className="mt-5">图书列表：</p>
+              <ul className="mt-2.5">
+                {state.bookList.map((book) => (
+                  <li key={book.id}>
+                    {book.title} - {book.author} - {book.price.toFixed(2)}元
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5">电影列表：</p>
+              <ul className="mt-2.5">
+                {state.movieList.map((movie) => (
+                  <li key={movie.id}>
+                    {movie.title} - {movie.author} - {movie.price.toFixed(2)}元
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        };
+
+        // ========== 渲染函数 ==========
+        const render = () => {
+          if (!root) {
+            root = ReactDOM.createRoot(document.getElementById("root"));
+          }
+          root.render(<LoginForm />);
+        };
+
+        // ========== 初始化 ==========
+        const init = () => {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", render);
+          } else {
+            render();
+          }
+        };
+
+        // 启动应用
+        init();
+      })();
+    </script>
+  </body>
+</html>

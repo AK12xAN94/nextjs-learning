@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录页面</title>
+    <!-- 引入 React 和 ReactDOM -->
+    <script
+      defer
+      src="https://unpkg.com/react@18.2.0/umd/react.development.js"
+    ></script>
+    <script
+      defer
+      src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"
+    ></script>
+    <!-- 引入 Babel 用于编译 JSX -->
+    <script
+      defer
+      src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"
+    ></script>
+    <!-- 内联全局样式 -->
+    <style>
+      /* 基础样式重置 */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+          Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background-color: #f5f5f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      /* 登录容器 */
+      .login-container {
+        max-width: 400px;
+        width: 100%;
+        padding: 30px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background-color: #ffffff;
+      }
+
+      /* 登录标题 */
+      .login-title {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      /* 表单组 */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #4a90d9;
+        box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.1);
+      }
+
+      .form-group input.error {
+        border-color: #e74c3c;
+      }
+
+      .form-group input.error:focus {
+        box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+      }
+
+      /* 错误消息 */
+      .error-message {
+        color: #e74c3c;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+
+      /* 按钮基础样式 */
+      .btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.1s;
+      }
+
+      .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .btn:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      /* 主按钮样式 */
+      .btn-primary {
+        background-color: #4a90d9;
+        color: white;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background-color: #357abd;
+      }
+
+      .btn-primary:disabled {
+        background-color: #95a5a6;
+      }
+
+      /* 状态消息 */
+      .status-message {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 15px;
+      }
+
+      .status-message.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-message.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .status-message.loading {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      /* 登录提示 */
+      .login-hint {
+        text-align: center;
+        margin-top: 15px;
+        color: #999;
+        font-size: 12px;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 480px) {
+        .login-container {
+          padding: 20px;
+          margin: 10px;
+        }
+        
+        .login-title {
+          font-size: 20px;
+        }
+        
+        .form-group input {
+          padding: 10px;
+        }
+        
+        .btn {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+      // 使用立即执行函数创建模块化结构
+      (() => {
+        // 缓存 root 实例
+        let root = null;
+
+        // ========== API 模块 ==========
+        const login = async (credentials) => {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          if (credentials.username === 'admin' && credentials.password === '123456') {
+            return {
+              success: true,
+              data: {
+                token: 'mock_jwt_token_12345',
+                user: { id: 1, username: 'admin', nickname: '管理员' }
+              },
+              message: '登录成功'
+            };
+          } else {
+            return {
+              success: false,
+              message: '用户名或密码错误（演示：用户名 admin，密码 123456）'
+            };
+          }
+        };
+
+        const saveUserSession = (user, token) => {
+          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('token', token);
+        };
+
+        // ========== 验证模块 ==========
+        const validateUsername = (username) => {
+          if (!username || !username.trim()) return '请输入用户名';
+          if (username.trim().length < 3) return '用户名至少需要3个字符';
+          return '';
+        };
+
+        const validatePassword = (password) => {
+          if (!password) return '请输入密码';
+          if (password.length < 6) return '密码至少需要6个字符';
+          return '';
+        };
+
+        const validateLoginForm = (formData) => {
+          const errors = {
+            username: validateUsername(formData.username),
+            password: validatePassword(formData.password)
+          };
+          return { errors, isValid: !errors.username && !errors.password };
+        };
+
+        // ========== 状态管理 ==========
+        let state = {
+          formData: { username: '', password: '' },
+          errors: { username: '', password: '' },
+          isLoading: false,
+          statusMessage: '',
+          statusType: ''
+        };
+
+        const updateState = (newState) => {
+          state = { ...state, ...newState };
+          render();
+        };
+
+        const updateField = (field, value) => {
+          updateState({
+            formData: { ...state.formData, [field]: value },
+            errors: { ...state.errors, [field]: '' }
+          });
+        };
+
+        const showStatusMessage = (message, type) => {
+          updateState({ statusMessage: message, statusType: type });
+          if (type !== 'loading') {
+            setTimeout(() => {
+              updateState({ statusMessage: '', statusType: '' });
+            }, 3000);
+          }
+        };
+
+        // ========== 组件定义 ==========
+        const InputField = ({ label, id, type = 'text', placeholder, value, onChange, error, disabled }) => (
+          <div className="form-group">
+            <label htmlFor={id}>{label}</label>
+            <input
+              id={id}
+              type={type}
+              placeholder={placeholder}
+              value={value}
+              onChange={(e) => onChange(id, e.target.value)}
+              className={error ? 'error' : ''}
+              disabled={disabled}
+            />
+            {error && <div className="error-message">{error}</div>}
+          </div>
+        );
+
+        const StatusMessage = ({ message, type }) => {
+          if (!message) return null;
+          return <div className={`status-message ${type}`}>{message}</div>;
+        };
+
+        const Button = ({ children, onClick, disabled }) => (
+          <button className="btn btn-primary" onClick={onClick} disabled={disabled}>
+            {children}
+          </button>
+        );
+
+        const LoginForm = () => {
+          const handleLogin = async () => {
+            try {
+              const { errors, isValid } = validateLoginForm(state.formData);
+              updateState({ errors });
+              
+              if (!isValid) return;
+
+              showStatusMessage('正在登录...', 'loading');
+              updateState({ isLoading: true });
+
+              const response = await login(state.formData);
+
+              if (response.success) {
+                showStatusMessage(response.message, 'success');
+                saveUserSession(response.data.user, response.data.token);
+                setTimeout(() => {
+                  alert(`登录成功！欢迎, ${response.data.user.nickname}`);
+                }, 1000);
+              } else {
+                showStatusMessage(response.message, 'error');
+                updateState({ isLoading: false });
+              }
+            } catch (error) {
+              console.error('登录过程发生错误:', error);
+              showStatusMessage('登录失败，请稍后重试', 'error');
+              updateState({ isLoading: false });
+            }
+          };
+
+          return (
+            <div className="login-container">
+              <h1 className="login-title">用户登录</h1>
+              <StatusMessage message={state.statusMessage} type={state.statusType} />
+              <InputField
+                label="用户名"
+                id="username"
+                type="text"
+                placeholder="请输入用户名"
+                value={state.formData.username}
+                onChange={updateField}
+                error={state.errors.username}
+                disabled={state.isLoading}
+              />
+              <InputField
+                label="密码"
+                id="password"
+                type="password"
+                placeholder="请输入密码"
+                value={state.formData.password}
+                onChange={updateField}
+                error={state.errors.password}
+                disabled={state.isLoading}
+              />
+              <Button onClick={handleLogin} disabled={state.isLoading}>
+                {state.isLoading ? '登录中...' : '登录'}
+              </Button>
+              <p className="login-hint">演示账号：用户名 admin，密码 123456</p>
+            </div>
+          );
+        };
+
+        // ========== 渲染函数 ==========
+        const render = () => {
+          if (!root) {
+            root = ReactDOM.createRoot(document.getElementById('root'));
+          }
+          root.render(<LoginForm />);
+        };
+
+        // ========== 初始化 ==========
+        const init = () => {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', render);
+          } else {
+            render();
+          }
+        };
+
+        // 启动应用
+        init();
+      })();
+    </script>
+  </body>
+</html>

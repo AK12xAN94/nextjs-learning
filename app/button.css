@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+.my-btn-black {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.my-btn-blue {
+  background-color: #007bff;
+}
+
+.my-btn-purple {
+  background-color: #800080;
+}
